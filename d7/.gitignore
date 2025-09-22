@@ -8,5 +8,7 @@
 !*.cc
 !*.cpp
 !.gitignore
+!resource/*
+!constr/*
 build/
 obj_dir/

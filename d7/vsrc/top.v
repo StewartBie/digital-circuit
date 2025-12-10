@@ -49,24 +49,31 @@ module top (
       .led(ledh2)
   );
 
-  reg [9:0] buffer;  // ps2_data bits
-  reg [3:0] count;  // count ps2_data bits
-  reg [2:0] ps2_clk_sync;
+  reg  [9:0] buffer;  // ps2_data bits
+  reg  [3:0] count;  // count ps2_data bits
+  reg  [2:0] ps2_clk_sync;
 
-  reg [3:0] num0;
-  reg [3:0] num1;
+  reg  [3:0] num0;
+  reg  [3:0] num1;
   // MakeCode
-  reg [3:0] num2;
-  reg [3:0] num3;
-  reg [3:0] num2out;
-  reg [3:0] num3out;
+  reg  [3:0] num2;
+  reg  [3:0] num3;
+  reg  [3:0] num2out;
+  reg  [3:0] num3out;
 
   // times
-  reg [7:0] pcount;  //press times
-  wire [3:0] num4;
+  reg  [7:0] pcount;  //press times
+  wire [3:0] num4;  // show times
   wire [3:0] num5;
 
+  assign num4 = pcount[3:0];
+  assign num5 = pcount[7:4];
+
   reg [7:0] codebuff;
+  reg [7:0] last_code;  // restore last state
+  wire release_flag = (codebuff == 8'hF0) & (buffer[8:1] == last_code);
+  reg [1:0] release_reg;
+  reg count_ready;
 
   wire resetn = !rst;
 
@@ -78,8 +85,10 @@ module top (
 
   always @(posedge clk) begin
     if (resetn == 0) begin  // reset
-      count  <= 0;
+      count <= 0;
       pcount <= 0;
+      last_code <= 8'h00;
+      count_ready <= 0;
     end else begin
       if (sampling) begin
         if (count == 4'd10) begin
@@ -87,7 +96,17 @@ module top (
               (ps2_data) &&  // stop bit
               (^buffer[9:1])) begin  // odd  parity
             $display("receive buffer %x", buffer[8:1]);
-            codebuff <= buffer[8:1];  //
+            last_code <= codebuff;
+            codebuff <= buffer[8:1];
+            release_reg <= {release_reg[0], release_flag};
+            if (release_reg[1] & ~release_reg[0]) begin
+              count_ready <= 1;
+            end
+            if ((count_ready) & (buffer[8:1] != 8'hF0)) begin
+              // count logic
+              pcount <= pcount + 1;
+              count_ready <= 0;
+            end
             if (codebuff != 8'hF0 & buffer[8:1] != 8'hF0) begin
               num0 <= buffer[4:1];
               num1 <= buffer[8:5];

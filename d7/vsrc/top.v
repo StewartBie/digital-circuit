@@ -100,12 +100,10 @@ module top (
             codebuff <= buffer[8:1];
             release_reg <= {release_reg[0], release_flag};
             if (release_reg[1] & ~release_reg[0]) begin
-              count_ready <= 1;
-            end
-            if ((count_ready) & (buffer[8:1] != 8'hF0)) begin
-              // count logic
-              pcount <= pcount + 1;
-              count_ready <= 0;
+              // 在检测到释放时直接计数，避免时序冲突
+              if (last_code != 8'hF0) begin
+                pcount <= pcount + 1;
+              end
             end
             if (codebuff != 8'hF0 & buffer[8:1] != 8'hF0) begin
               num0 <= buffer[4:1];
@@ -175,6 +173,66 @@ module top (
       end
       8'h1C: begin  //A
         num2 = 4'h2;
+        num3 = 4'h4;
+      end
+      8'h1B: begin  //S
+        num2 = 4'h3;
+        num3 = 4'h5;
+      end
+      8'h23: begin  //D
+        num2 = 4'h4;
+        num3 = 4'h4;
+      end
+      8'h2B: begin  //F
+        num2 = 4'h6;
+        num3 = 4'h4;
+      end
+      8'h34: begin  //G
+        num2 = 4'h7;
+        num3 = 4'h4;
+      end
+      8'h33: begin  //H
+        num2 = 4'h8;
+        num3 = 4'h4;
+      end
+      8'h3B: begin  //J
+        num2 = 4'hA;
+        num3 = 4'h4;
+      end
+      8'h42: begin  //K
+        num2 = 4'hB;
+        num3 = 4'h4;
+      end
+      8'h4B: begin  //L
+        num2 = 4'hC;
+        num3 = 4'h4;
+      end
+      8'h1A: begin  //Z
+        num2 = 4'hA;
+        num3 = 4'h5;
+      end
+      8'h22: begin  //X
+        num2 = 4'h8;
+        num3 = 4'h5;
+      end
+      8'h21: begin  //C
+        num2 = 4'h3;
+        num3 = 4'h4;
+      end
+      8'h2A: begin  //V
+        num2 = 4'h6;
+        num3 = 4'h5;
+      end
+      8'h32: begin  //B
+        num2 = 4'h2;
+        num3 = 4'h4;
+      end
+      8'h31: begin  //N
+        num2 = 4'hE;
+        num3 = 4'h4;
+      end
+      8'h3A: begin  //M
+        num2 = 4'hD;
         num3 = 4'h4;
       end
 

@@ -78,7 +78,7 @@ module top (
   wire resetn = !rst;
 
   always @(posedge clk) begin
-    ps2_clk_sync <= {ps2_clk_sync[1:0], ps2_clk};
+    ps2_clk_sync <= {ps2_clk_sync[1:0], ps2_clk}; // shift left
   end
 
   wire sampling = ps2_clk_sync[2] & ~ps2_clk_sync[1];

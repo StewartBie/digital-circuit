@@ -2,17 +2,23 @@ module top (
     input clk,
     input rst,
 
-    input [7:0] in,
+    input  [7:0] in,
     output [6:0] led
 );
-	wire [2:0] line;
-	encoder83	inst1( .in(in) , .out(line));
-	decoderled7 	inst2(.in(line), .led(led));
+  wire [2:0] line;
+  encoder83 inst1 (
+      .in (in),
+      .out(line)
+  );
+  decoderled7 inst2 (
+      .in (line),
+      .led(led)
+  );
 
 endmodule
 
 module encoder83 (
-    input  [7:0] in,
+    input [7:0] in,
     output reg [2:0] out
 );
 
@@ -48,8 +54,8 @@ module decoderled7 (
   assign led[0] = (in == 3'h0) ||(in == 3'h2)|(in == 3'h3)|(in == 3'h5)|| (in == 3'h6)||(in == 3'h7);
   assign led[1] = (in == 3'h0) ||(in == 3'h1)||(in == 3'h2)||(in == 3'h3)|| (in == 3'h4)||(in == 3'h7);
   assign led[2] = (in == 3'h0) ||(in == 3'h1)||(in == 3'h3)|| (in == 3'h4)||(in == 3'h5)||(in == 3'h6)||(in == 3'h7);
-  assign led[3] = (in == 3'h0) ||(in == 3'h2)||(in == 3'h3)|| (in == 3'h5)||(in == 3'h6);
-  assign led[4] = (in == 3'h0) ||(in == 3'h2)||(in == 3'h6);
-  assign led[5] = (in == 3'h0) ||(in == 3'h4)||(in == 3'h5)|| (in == 3'h6);
-  assign led[6] = (in == 3'h2) ||(in == 3'h3)||(in == 3'h4)|| (in == 3'h5)||(in == 3'h6);
+  assign led[3] = (in == 3'h0) || (in == 3'h2) || (in == 3'h3) || (in == 3'h5) || (in == 3'h6);
+  assign led[4] = (in == 3'h0) || (in == 3'h2) || (in == 3'h6);
+  assign led[5] = (in == 3'h0) || (in == 3'h4) || (in == 3'h5) || (in == 3'h6);
+  assign led[6] = (in == 3'h2) || (in == 3'h3) || (in == 3'h4) || (in == 3'h5) || (in == 3'h6);
 endmodule

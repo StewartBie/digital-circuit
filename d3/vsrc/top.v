@@ -1,54 +1,92 @@
 //`include "segled.v"
 module top (
+    input [3:0] A,
+    input [3:0] B,
+    input [2:0] op,
     input clk,
     input rst,
-    input [3:0] num1,
-    input [3:0] num2,
-    input [2:0] fun,
 
-    output reg [3:0] outNum,
-    output overflow,
-    output equalZero,
-    output Carry
+    output Cout,
+    output Overflow,
+    output Zero,
+    output [6:0] ledA,
+    output [6:0] ledB,
+    output [6:0] ledR
 );
-  wire AddCarry;
-  wire SubCarry;
-  wire addOvf;
-  wire subOvf;
-  wire [3:0] addResult;
-  wire [3:0] subResult;
-  wire [3:0] Result;
-  wire Cin = fun[0];
 
-  wire [3:0] t_no_Cin;
-  // subtract
-  assign t_no_Cin = {4{Cin}} ^ num2;
-  assign {SubCarry, subResult} = num1 + t_no_Cin + Cin;
-  assign subOvf = (num1[3] == t_no_Cin[3]) && (subResult[3] != num1[3]);  //overflow
-  assign {AddCarry, addResult} = {1'b0, num1} + {1'b0, num2} + Cin;  //add result
-  assign addOvf = (num1[3] == num2[3]) && (addResult[3] != num1[3]);
+  wire [3:0] B_xor;
+  wire Cin;
+  wire [3:0] Sum;
+  wire add_Cout;
+  reg [3:0] Result;
 
-  assign overflow = (fun == 3'b000) ? addOvf : (fun == 3'b001) ? subOvf : 1'b0;
-  assign Result = (fun == 3'b000) ? addResult : (fun == 3'b001) ? subResult : 1'b0;
-  assign Carry = (fun == 3'b000) ? AddCarry : (fun == 3'b001) ? SubCarry : 1'b0;
+  // 判断是否减法
+  wire sub = (op == 3'b001);
 
-  assign equalZero = ~(|Result);
+  // 构造加/减法输入
+  assign B_xor = B ^ {4{sub}};
+  assign Cin   = sub;
+
+  adder u_adder (
+      .A(A),
+      .B(B_xor),
+      .Cin(Cin),
+      .Res(Sum),
+      .Cout(add_Cout),
+      .Overflow(Overflow)
+  );
+
+  seg7 u_segA (
+      .clk(clk),
+      .rst(rst),
+      .in (A),
+      .led(ledA)
+  );
+  seg7 u_segB (
+      .clk(clk),
+      .rst(rst),
+      .in (B),
+      .led(ledB)
+  );
+  seg7 u_segR (
+      .clk(clk),
+      .rst(rst),
+      .in (Result),
+      .led(ledR)
+  );
+  // Overflow（有符号）
+
+  assign Cout = add_Cout;
+
+  // Zero 标志
+  assign Zero = !(|Result );
+
+  // A < B signed
+  wire slt;  //smaller than
+  assign slt = Sum[3] ^ Overflow;
+
+  // A == B
+  wire eq;
+  assign eq = (A == B);
+
+
+  // ALU 多路选择
 
   always @(*) begin
-    case (fun)
-      3'b000: outNum = addResult;
-      3'b001: outNum = subResult;
-      3'b010: outNum = ~num1;
-      3'b011: outNum = num1 & num2;
-      3'b100: outNum = num1 | num2;
-      3'b101: outNum = num1 ^ num2;
-      3'b110: outNum = {3'b000, (!SubCarry)};
-      3'b111: outNum = {3'b000, equalZero};
+    case (op)
+      3'b000: Result = Sum;  // A + B
+      3'b001: Result = Sum;  // A - B
+      3'b010: Result = ~A;  // NOT A
+      3'b011: Result = A & B;  // AND
+      3'b100: Result = A | B;  // OR
+      3'b101: Result = A ^ B;  // XOR
 
-      default: outNum = 4'b0000;
+      3'b110: Result = {3'b000, slt};  // SLT
+
+      3'b111: Result = {3'b000, eq};  // EQ
+
+      default: Result = 4'b0000;
     endcase
   end
 
 endmodule
-
-

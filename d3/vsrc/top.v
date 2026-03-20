@@ -16,12 +16,12 @@ module top (
 
   wire [3:0] B_xor;
   wire Cin;
-  wire [3:0] Sum;
+  wire [3:0] Sum; // adder result
   wire add_Cout;
   reg [3:0] Result;
 
   // 判断是否减法
-  wire sub = (op == 3'b001);
+  wire sub = ((op[1] == 1'b1) && (op[2] == 1'b1)) | (op == 3'b001);
 
   // 构造加/减法输入
   assign B_xor = B ^ {4{sub}};
@@ -59,7 +59,7 @@ module top (
   assign Cout = add_Cout;
 
   // Zero 标志
-  assign Zero = !(|Result );
+  assign Zero = !(|Sum);
 
   // A < B signed
   wire slt;  //smaller than
@@ -67,7 +67,7 @@ module top (
 
   // A == B
   wire eq;
-  assign eq = (A == B);
+  assign eq = !(|Sum);
 
 
   // ALU 多路选择
